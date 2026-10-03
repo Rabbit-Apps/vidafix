@@ -1,0 +1,404 @@
+VIDAFIX - STEP-BY-STEP INSTALLATION AND CONFIGURATION
+
+The intended use of this software is to be hosted on your current Plex server,
+with your current Hisense VIDAA TV running Vidafix in place of the Plex app if
+it is affected by the missing album art issue and you have been unable to resolve
+that issue. Vidafix provides an alternative TV interface to your existing Plex
+library; Plex Media Server still manages and streams your media.
+
+Vidafix is an independent, unofficial client. It has been used on a Hisense
+55U7HAU running VIDAA 6. Other TV models and firmware may behave differently.
+It does not remove Plex Media Server, replace your library or uninstall the
+original Plex app. Artwork caching can improve loading; it cannot restore
+artwork missing from the Plex server itself.
+
+BEFORE YOU START
+
+1. Keep Plex Media Server installed and confirm its library works in Plex Web.
+2. Download the clean Vidafix portable ZIP and extract the entire archive.
+   Do not run it from inside a ZIP viewer.
+3. Prefer hosting Vidafix on the same Windows or Linux computer as Plex.
+   That computer must remain powered on, connected and awake while watching.
+4. Connect the host and TV to the same trusted home network. Guest Wi-Fi,
+   device isolation and some VPNs can block access between devices.
+5. Reserve a stable address for the host in your router's DHCP settings.
+6. Obtain your own Plex authentication token. Keep it private. Plex's guide:
+   https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/
+7. Python and an initial dependency download are required. The portable ZIP
+   contains source, not a bundled Python runtime or a standalone executable.
+
+IMPORTANT ADDRESS DIFFERENCE
+
+Plex Media Server normally uses port 32400.
+Vidafix normally uses port 8765.
+
+In config.ini, server points to Plex, for example:
+  http://127.0.0.1:32400
+
+The TV connects to Vidafix, for example:
+  http://HOST-LAN-IP:8765/
+
+Replace HOST-LAN-IP with the actual host address. Never type that placeholder
+literally, and never use 127.0.0.1 from the TV to reach a different computer.
+
+
+A. INSTALL ON WINDOWS
+
+1. Install a supported Python release from:
+   https://www.python.org/downloads/windows/
+   Python 3.12 is a tested baseline; Vidafix requires Python 3.9 or newer.
+   Include pip and the Python launcher (py), or make python available on PATH.
+
+2. Put the extracted vidafix folder in a permanent location you can write to.
+   Avoid Program Files, shared folders and cloud-synced folders because the
+   configuration you create will contain your Plex token.
+
+3. Open the vidafix folder and double-click Setup-Windows.cmd.
+   Wait for dependency installation to finish. It creates a local .venv and
+   config.ini. If config.ini already exists, setup preserves it.
+   If setup reports an error, resolve it before proceeding.
+
+4. Right-click config.ini and open it with Notepad. Configure it as described
+   in section C below. Save it as config.ini, not config.ini.txt. Turn on file
+   name extensions in File Explorer if you cannot see the full filename.
+
+5. Double-click Start-Vidafix.cmd. Leave its window open.
+   If an error appears, read the message; do not assume the server started.
+   Ctrl+C stops this foreground server.
+
+6. On the hosting PC, open:
+   http://127.0.0.1:8765/
+   Confirm that libraries and posters load.
+
+7. Open Command Prompt or PowerShell and run:
+   ipconfig
+   Find the IPv4 address for the active Ethernet or Wi-Fi adapter. Avoid VPN
+   and disconnected adapter addresses. This is the host's LAN IP for the TV.
+
+8. From another computer on your home network, open:
+   http://HOST-LAN-IP:8765/
+   Confirm it works there before sideloading a TV tile.
+
+9. If Windows Firewall prompts, allow access only on your trusted Private
+   network. If needed, use Windows Defender Firewall with Advanced Security
+   to allow inbound TCP port 8765 on the Private profile, restricted to the
+   TV IP or Local subnet. Use your configured port if you changed it.
+   Do not disable the firewall, enable Public-network access or forward the
+   port through your router. The scripts do not change firewall rules.
+
+10. For optional automatic startup, first stop the foreground server.
+    Open PowerShell in the vidafix folder and run:
+
+    .\.venv\Scripts\python.exe -m tools.windows install-startup
+    .\.venv\Scripts\python.exe -m tools.windows startup-start
+    .\.venv\Scripts\python.exe -m tools.windows startup-status
+
+    This registers a task for the current account. It starts after that account
+    signs in, not before sign-in, and stores no Windows password. Registration
+    does not start the app until startup-start or your next sign-in.
+    If task registration is denied, retry in an administrator terminal using
+    the SAME account. Do not run the foreground launcher at the same time.
+
+    To stop the scheduled copy:
+    .\.venv\Scripts\python.exe -m tools.windows startup-stop
+
+    To stop and remove automatic startup:
+    .\.venv\Scripts\python.exe -m tools.windows remove-startup
+
+    Background logs are in .logs. Keep logs private unless carefully redacted.
+    Keep this PC awake; sleep or signing out can interrupt TV playback.
+
+
+B. INSTALL ON LINUX MINT
+
+1. Extract the ZIP to a permanent folder you own. Open a terminal inside the
+   extracted vidafix folder. Do not run the app as root.
+
+2. Install the required Python tools:
+
+   sudo apt update
+   sudo apt install python3 python3-venv python3-pip
+
+3. Run setup from the vidafix folder:
+
+   sh Setup-Linux.sh
+
+   This creates .venv, installs dependencies, creates config.ini if absent,
+   and restricts its permissions. Your existing configuration is preserved.
+
+4. Edit the configuration:
+
+   nano config.ini
+
+   Use section C below. In nano, press Ctrl+O, Enter to save, then Ctrl+X to exit.
+
+5. Start the app:
+
+   sh Start-Linux.sh
+
+   Keep the terminal open. Ctrl+C stops it.
+
+6. On the Linux host, open:
+   http://127.0.0.1:8765/
+   Confirm libraries and artwork load.
+
+7. Find your host address:
+
+   hostname -I
+
+   If several addresses appear, choose the one for your active home-network
+   adapter, not a VPN or container network. You can also inspect the connection
+   details in Mint's network settings.
+
+8. Test from another device:
+   http://HOST-LAN-IP:8765/
+
+   If Mint's firewall is enabled, allow inbound TCP 8765 only from the TV or
+   trusted LAN. Do not disable the firewall or forward the port on your router.
+
+9. For automatic startup at boot, stop the foreground app with Ctrl+C.
+   From the vidafix folder, as its normal owner, run:
+
+   sh deploy/install-service.sh
+
+   Enter your sudo password when requested. The installer uses your current
+   account and app directory, installs the service and starts it immediately.
+   The historical service name remains vidplex for upgrade compatibility.
+
+10. Check and manage the service:
+
+    sudo systemctl status vidplex --no-pager
+    sudo systemctl restart vidplex
+    sudo journalctl -u vidplex -n 50 --no-pager
+
+    To stop it:
+    sudo systemctl stop vidplex
+
+    To stop it and disable boot startup:
+    sudo systemctl disable --now vidplex
+
+    Keep the app at this path after installing the service. Verify automatic
+    startup after your next planned reboot. Do not run Start-Linux.sh while
+    systemd is already running the app.
+
+
+C. CONFIGURE PLEX ACCESS - BOTH PLATFORMS
+
+1. Open config.ini locally and set these values:
+
+   [plex]
+   server = http://127.0.0.1:32400
+   token = YOUR_PLEX_TOKEN
+   library =
+
+   [web]
+   listen = 0.0.0.0
+   port = 8765
+
+2. Replace YOUR_PLEX_TOKEN with your actual token; do not leave the placeholder.
+   Paste the token value only, without surrounding quotation marks.
+
+3. If Plex and Vidafix are on the same computer, use the loopback address shown.
+   If Plex is on a different computer, replace it with Plex's literal private
+   LAN IP and port. Hostnames and public addresses are rejected.
+
+4. Leave library blank. Home opens first and supported movie/show libraries
+   are discovered automatically using their Plex names.
+
+5. Leave listen as 0.0.0.0 for LAN access. This is a listening setting, not an
+   address you should type into the TV browser.
+
+6. Save the file and restart Vidafix. An existing PLEX_TOKEN environment
+   variable takes precedence over the token in this file. For predictable
+   automatic startup, use the private configuration file rather than relying
+   on an interactive shell's environment.
+
+7. Verify local access and access from a second device before continuing.
+   Vidafix has no separate login; only trusted devices should reach its port.
+   Never upload config.ini, .venv, .cache or .logs to GitHub or share them.
+
+
+D. OPEN VIDAFIX ON THE HISENSE TV
+
+1. Keep Vidafix running on the host.
+2. Open the TV's Internet Browser and visit:
+   http://HOST-LAN-IP:8765/
+3. Confirm the library loads. The browser may use a large pointer rather than
+   sending normal D-pad navigation events. This differs from the installed
+   launcher on the tested TV.
+4. If you already have a working Vidafix tile pointing at this address, open
+   it instead. Normal app updates do not require reinstalling that tile.
+
+If the TV cannot reach the URL, resolve connectivity first. Sideloading a tile
+will not fix a stopped server, wrong IP, firewall block or isolated network.
+
+
+E. OPTIONAL SIDELOADING - OBTAIN THE HELPER SEPARATELY
+
+UNOFFICIAL INSTALLATION AND REVIEW
+
+Vidafix and its optional sideload installation method are unofficial and are
+not affiliated with, endorsed by or approved by Plex, VIDAA or Hisense.
+
+Reasonable steps have been taken to review publication-related legal questions:
+we reviewed the publicly available vendor terms, checked the helper's available
+licensing information, adopted MIT for our own code, documented privacy practices,
+and excluded third-party helper code, credentials and personal settings from the
+release. These checks are documented in docs/PUBLISHING.md and
+docs/SIDELOADER_REVIEW.md.
+
+This is a limited project review, not legal advice, a legal opinion or confirmation
+that every use or installation method is permitted. Vendor authorization for the
+DNS-based installation method has not been established. Applicable terms and laws
+may differ by location and device. Users should review the terms applicable to
+their own equipment and use only media they are entitled to access.
+
+
+The public Vidafix package DOES NOT include a sideload helper, certificate or
+private key. An existing working TV tile does not need reinstalling when its
+Vidafix host address and port stay the same.
+
+E1. DOWNLOAD THE HELPER AND COPY IN THE VIDAFIX ADD-ON
+
+Upstream project: trialuser/vidaa-appstore
+  https://github.com/trialuser/vidaa-appstore
+
+1. Open that GitHub page and choose Code > Download ZIP.
+2. Extract it into its own folder OUTSIDE the Vidafix source folder.
+3. Review the upstream README and current terms before running it.
+4. From Vidafix's sideload-addon folder, copy these TWO files into the helper
+   folder, beside its server.py and config.json:
+     configure_vidafix.py
+     vidafix-install.template.html
+   Do not replace or edit the downloaded server.py.
+5. Open a terminal in that HELPER folder and run:
+     Windows: py -3 configure_vidafix.py
+     Linux:   python3 configure_vidafix.py
+   Enter the Vidafix APP HOST LAN IP, then the INSTALLER COMPUTER LAN IP.
+   Neither is the TV IP. They can be the same if that computer also hosts
+   Vidafix. The app port defaults to 8765; append --port NUMBER if necessary.
+6. The script backs up config.json and creates a configured Vidafix page.
+   No token, key, firewall change, server download or startup is involved.
+7. Continue with sideload-addon/READ_ME.txt steps 5-11 for installing dnslib,
+   checking TLS files, starting the helper, setting temporary TV DNS,
+   installing the tile and restoring the TV's ORIGINAL DNS afterwards.
+
+Our add-on files contain no private addresses and are licensed under MIT.
+The separately downloaded helper is an alternative, NOT a verified source of
+our previously supplied helper. This new combination is not TV-tested yet.
+It uses the existing vidplex-local tile ID; normal app-host updates do not
+require reinstalling an already-working tile. Never enter a Plex token here.
+No explicit licence file was visible in the reviewed upstream repository:
+do not bundle its server, keys or generated personal settings in Vidafix releases.
+
+IMPORTANT: E2 below applies only if you ALREADY HAVE the previously used helper.
+The files and settings differ. Use E1 and sideload-addon/READ_ME.txt with the
+GitHub download; do not apply the E2 edits to that downloaded server.py.
+
+E2. USING THE PREVIOUSLY SUPPLIED HELPER, IF YOU ALREADY HAVE IT
+
+Redistribution rights for that helper are unresolved; it remains excluded.
+See docs/SIDELOADER_REVIEW.md for the review.
+
+The helper is run temporarily on a Windows PC, even when Vidafix is hosted on
+Linux. The TV tile then opens the host directly. That Windows installation PC
+is not needed after the tile has been installed, unless it also hosts Vidafix.
+These steps describe the tested helper; other tools/firmware can differ.
+
+1. First confirm the app URL works from a second PC and the TV browser.
+   Keep the app host running throughout installation.
+
+2. Extract your existing Vidafix VIDAA sideload helper to a separate folder
+   on Windows. Its expected files include server.py, index.html, its launcher,
+   icon, and its local certificate/key. Do not place it in the public source
+   folder or publish those private key files.
+
+3. Open the helper's index.html in a TEXT EDITOR, not a browser. Set the host
+   address and port in these entries. For example only, if your host is
+   192.168.1.20 and the app uses port 8765:
+
+   var APP_URL='http://192.168.1.20:8765/';
+   var ICON_URL='http://192.168.1.20:8765/static/vidafix.png';
+
+   Also update the hostname/IP passed to Hisense_AddInsecureDomain to that
+   same host IP, WITHOUT a scheme, slash or port:
+
+   Hisense_AddInsecureDomain('192.168.1.20');
+
+   Replace the example with YOUR actual host. Keep APP_NAME as Vidafix and
+   APP_ID as vidplex-local when updating an existing Vidafix installation.
+   Do not use the original Plex app's ID or change unrelated entries.
+
+4. In this helper's server.py, the get_local_ip function uses a UDP connection
+   to select the network adapter. If its s.connect destination still refers
+   to another deployment, set that destination to your app host IP and port.
+   This selection does not send a Plex token. Save the edited files.
+
+5. Verify the icon URL from step 3 opens from another PC. An incorrect host
+   or missing icon can prevent a useful launcher installation.
+
+6. Run Run-Vidafix-VIDAA.cmd from the helper folder. If binding ports 53/443
+   fails due to permissions, use Run as administrator. Confirm Python is
+   installed and another DNS/web service is not using those ports.
+   Allow inbound UDP 53 and TCP 443 only from the TV on your Private network.
+
+7. Note the installation PC's LAN IP printed by the helper. This is the TV's
+   TEMPORARY DNS address. It may differ from the Vidafix app host's address.
+   If it prints 127.0.0.1, stop and correct the adapter/address selection.
+
+8. On the TV, record its current DNS setting. In its network settings,
+   temporarily change the TV's DNS server to the INSTALLATION PC's LAN IP.
+   Menu labels vary by firmware; do not alter router DNS or other devices.
+
+9. With the helper running, visit this in the TV browser:
+   https://vidaahub.com
+
+   The existing helper serves its local installation page through that name
+   and uses a self-signed certificate. A warning may appear. Confirm you are
+   deliberately using your trusted local helper and the expected address;
+   decide on the TV whether to proceed. Do not apply this exception to other
+   websites or enter Plex credentials into the installer page.
+
+10. Check that the page says Vidafix and its installation API is available.
+    Choose Install Vidafix. Wait for the result. An accepted callback is a
+    request acknowledgement, not proof the tile will appear on every firmware.
+
+11. Restore the TV's PREVIOUS DNS setting immediately (Automatic only if that
+    was its original setting), even if installation failed. The helper forwards
+    other DNS requests to external resolvers while the TV is using it.
+
+12. Stop/close the helper. Restart the TV fully; if necessary, turn it off and
+    disconnect power for about 10 seconds before reconnecting.
+
+13. Open Vidafix from the TV launcher and check library navigation, artwork,
+    playback and Back. The server host must still be running and reachable.
+    Keep the original Plex app available while testing this beta.
+
+14. If the app host's IP or port changes, update the helper's app/icon/host
+    entries and reinstall the tile. Do not leave the TV using temporary DNS.
+
+Sideloading depends on undocumented/vendor-specific APIs and TV firmware.
+These steps are not evidence of vendor endorsement or distribution permission.
+The same helper's Uninstall button removes its Vidafix tile, not your media or
+Plex server. On unsupported firmware, browser access remains the fallback.
+
+
+F. USING AND UPDATING VIDAFIX
+
+1. Browse Home or a named library. Open a series, choose a season, then an
+   episode. Library grids have 20-item pages; Home shelves can show 100 items.
+2. Choose audio/subtitles before Play or Resume. Find subtitles opens a menu
+   of Plex search results. Choose a download, wait for Plex to add the track,
+   then select it in Subtitles. Search/download requires internet from Plex.
+3. Episode autoplay defaults On. Toggle it Off in episode details if desired.
+   Manual Stop and movies do not trigger next-episode playback.
+4. Stop playback and return Home to check updated progress/On Deck.
+5. Before updating source, stop the app or its startup task/service. Preserve
+   your private config.ini, update source and dependencies, then restart.
+   Fully close and reopen the TV app. Do not overwrite config with the example.
+6. Share only the original clean ZIP. If you move to another computer/platform,
+   recreate its .venv locally and reinstall optional startup for its new path.
+
+Further detail: README.md and QUICK_START.md in this package.
+Licence: LICENSE (MIT). Use, modification, redistribution and sale are allowed
+when its copyright and permission notices are retained. Privacy: PRIVACY.md.
