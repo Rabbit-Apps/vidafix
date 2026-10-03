@@ -1,0 +1,71 @@
+<!doctype html>
+<!-- Copyright (c) 2026 Vidafix contributors. Licensed under MIT; see LICENSE. -->
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Install Vidafix</title>
+<style>
+body{background:#141922;color:white;font:24px Arial,sans-serif;padding:40px;text-align:center}
+button{font:inherit;padding:16px;margin:12px;background:#29394f;color:white;border:3px solid #64748b}
+button:focus{border-color:#f9dd64;outline:3px solid #f9dd64}
+.brand{color:#b388ff}img{width:180px;height:180px}#status{line-height:1.5}
+</style></head><body>
+<h1><span class="brand">Vida</span>fix</h1><img id="icon" alt="Vidafix">
+<p>Install a launcher for your local Vidafix host.</p>
+<button id="install" type="button">Install Vidafix</button>
+<button id="remove" type="button">Remove Vidafix tile</button>
+<p id="status">Checking installation support...</p>
+<p>After the attempt, restore your previous TV DNS setting and stop the helper.</p>
+<script>
+(function () {
+  'use strict';
+  var settings = __VIDAFIX_SETTINGS__;
+  var tileId = 'vidplex-local';
+  var status = document.getElementById('status');
+  var install = document.getElementById('install');
+  var remove = document.getElementById('remove');
+  document.getElementById('icon').src = settings.icon;
+  function say(message) { status.textContent = message; }
+  function ready(api) {
+    if (location.hostname !== 'vidaahub.com' || typeof window[api] !== 'function') {
+      say('Open https://vidaahub.com on the TV using your temporary local helper DNS. Installation API unavailable.');
+      return false;
+    }
+    return true;
+  }
+  install.onclick = function () {
+    if (!ready('Hisense_installApp')) { return; }
+    say('Sending install request...');
+    try {
+      if (typeof window.Hisense_AddInsecureDomain === 'function') {
+        window.Hisense_AddInsecureDomain(settings.host);
+      }
+      window.Hisense_installApp(tileId, 'Vidafix', settings.icon, settings.icon,
+        settings.icon, settings.url, 'store', function (result) {
+          say(result === 0 ? 'Request accepted. Restore the previous DNS, stop the helper and fully restart the TV, then check the tile.' :
+            'Install rejected. TV callback: ' + result);
+        });
+    } catch (error) { say('Install failed. ' + error.message); }
+  };
+  remove.onclick = function () {
+    if (!ready('Hisense_uninstallApp')) { return; }
+    try {
+      window.Hisense_uninstallApp(tileId, function (result) {
+        say(result === 0 ? 'Removal request accepted. Restart the TV to check.' : 'Removal rejected. TV callback: ' + result);
+      });
+    } catch (error) { say('Removal failed. ' + error.message); }
+  };
+  document.onkeydown = function (event) {
+    event = event || window.event;
+    var key = event.keyCode;
+    if (key === 37 || key === 38 || key === 39 || key === 40) {
+      (document.activeElement === install ? remove : install).focus();
+    } else if (key === 13) {
+      if (document.activeElement === remove) { remove.onclick(); } else { install.onclick(); }
+    } else { return; }
+    if (event.preventDefault) { event.preventDefault(); }
+  };
+  say(location.hostname === 'vidaahub.com' && typeof window.Hisense_installApp === 'function' ?
+    'Ready. Installation does not require your Plex token.' : 'Open through your temporary helper at https://vidaahub.com on the TV.');
+  install.focus();
+}());
+</script></body></html>
