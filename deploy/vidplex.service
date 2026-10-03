@@ -1,0 +1,25 @@
+[Unit]
+Description=Vidafix local Plex TV client
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=@USER@
+WorkingDirectory="@APP_DIR@"
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment="VIDAA_CONFIG=@APP_DIR@/config.ini"
+ExecStart="@APP_DIR@/.venv/bin/python" -m server.app
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
