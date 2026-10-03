@@ -1,5 +1,7 @@
 # Vidafix
 
+Vidafix was created in response to the long-running issue of missing posters and artwork in Plex's app on older Hisense VIDAA TVs. Similar problems have been documented by users over several years in the [Plex community forums](https://forums.plex.tv/t/no-thumbnails-shown-on-plex-app-on-smarttv-hisense-vidaa/855645), including [reports affecting VIDAA U5](https://forums.plex.tv/t/thumbnails-do-not-appear-plex-5-29-1-on-vidaa-u5-0/764578). The issue remained unresolved on the TV this project was built for, so Vidafix provides an unofficial, self-hosted alternative with artwork fetched and cached through your local host.
+
 Start here: [step-by-step installation instructions](INSTALL_AND_CONFIGURE.txt) or [portable package quick start](QUICK_START.md). The same source folder supports Windows and Linux; Python is required locally.
 
 An independent, self-hosted Plex client for VIDAA TVs. Browse your own local libraries with a remote, load cached artwork, and play movies and episodes through your Plex Media Server.
