@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height">
+  <title>Vidafix</title>
+  <link rel="stylesheet" href="styles.css?v=subtitle-menu-12">
+</head>
+<body>
+  <header><strong class="brand"><span>Vida</span>fix</strong></header>
+  <main>
+    <section id="library-view">
+      <div id="libraries" aria-label="Libraries"></div>
+      <p id="status" role="status">Connecting to your local Plex server…</p>
+      <button id="retry" class="hidden" type="button">Try again</button>
+      <noscript>JavaScript is required. Enable it and open this app through the Python helper.</noscript>
+      <div id="posters" aria-label="Library posters"></div>
+    </section>
+    <section id="details-view" class="hidden">
+      <button id="back" type="button">← Back to library</button>
+      <div id="detail-content"></div>
+    </section>
+  </main>
+  <section id="player-view" class="hidden" aria-label="Video player">
+    <video id="video" preload="metadata" playsinline></video>
+    <div id="player-controls">
+      <p id="player-status" role="status"></p><p id="player-time"></p>
+      <button id="player-toggle" type="button">Pause</button>
+      <button id="player-rewind" type="button">Back 30 seconds</button>
+      <button id="player-forward" type="button">Forward 30 seconds</button>
+      <button id="player-stop" type="button">Stop / Back</button>
+    </div>
+  </section>
+  <footer>↑ ↓ ← → Move &nbsp; · &nbsp; OK Open &nbsp; · &nbsp; Back Return<span id="key-debug"></span></footer>
+  <script src="navigation.js"></script>
+  <script src="player.js?v=subtitle-menu-12"></script>
+  <script src="app.js?v=subtitle-menu-12"></script>
+</body>
+</html>
